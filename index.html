@@ -1,0 +1,518 @@
+```html
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kişisel Yapay Zeka Geliştirici Asistanı</title>
+    <!-- Tailwind CSS ve FontAwesome ikonları -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Kod blokları ve genel kaydırma çubukları için özel stiller */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e2e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #45475a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #585b70;
+        }
+        .code-block {
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-[#11111b] text-[#cdd6f4] min-h-screen flex flex-col font-sans">
+
+    <!-- Header / Başlık Alanı -->
+    <header class="bg-[#181825] border-b border-[#313244] py-4 px-6 flex items-center justify-between sticky top-0 z-50 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-[#89b4fa] to-[#cba6f7] p-2.5 rounded-xl shadow-lg shadow-indigo-500/10">
+                <i class="fa-solid fa-brain text-2xl text-[#11111b]"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-[#89b4fa] via-[#b4befe] to-[#cba6f7] bg-clip-text text-transparent">UltraCoder AI</h1>
+                <p class="text-xs text-[#a6adc8] flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Gelişmiş Kod Üretim Modu Aktif
+                </p>
+            </div>
+        </div>
+        
+        <!-- API Durumu & Model Bilgisi -->
+        <div class="flex items-center gap-4 text-xs">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-[#89b4fa] font-semibold">Model: DeepSeek Coder / Claude 3.5</span>
+                <span class="text-[#a6adc8]">Hedef: 5.000+ Satır Temiz Kod</span>
+            </div>
+            <div class="bg-[#313244]/50 border border-[#45475a] px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-key text-[#f9e2af]"></i>
+                <span class="font-mono text-[#a6adc8]">sk-or-v1...6a10</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ana Çalışma Alanı -->
+    <main class="flex-1 flex flex-col md:flex-row max-w-[1600px] w-full mx-auto p-4 gap-4 overflow-hidden h-[calc(100vh-73px)]">
+        
+        <!-- Sol Panel: Dosya Yükleme ve Talimatlar (Masaüstü için, Mobilde daralabilir) -->
+        <aside class="w-full md:w-80 bg-[#181825] border border-[#313244] rounded-2xl p-4 flex flex-col gap-4 overflow-y-auto shrink-0">
+            <div>
+                <h3 class="text-sm font-semibold text-[#f5c2e7] mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> Yapay Zeka Yapılandırması
+                </h3>
+                <p class="text-xs text-[#a6adc8] leading-relaxed">
+                    Bu sistem, verdiğiniz talimatları en ince ayrıntısına kadar analiz ederek <strong>minimum 5.000 ile maksimum 100.000 satır</strong> arasında eksiksiz, modüler ve üretime hazır kod blokları oluşturmak üzere optimize edilmiştir.
+                </p>
+            </div>
+
+            <hr class="border-[#313244]">
+
+            <!-- Dosya Yükleme Alanı -->
+            <div>
+                <h3 class="text-sm font-semibold text-[#89b4fa] mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-up"></i> Belge / Dosya Yükleme
+                </h3>
+                <div class="border-2 border-dashed border-[#45475a] hover:border-[#89b4fa] rounded-xl p-4 transition-colors text-center cursor-pointer relative" id="drop-zone">
+                    <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple>
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#a6adc8] mb-2"></i>
+                    <p class="text-xs font-medium">Dosyaları sürükleyin veya tıklayın</p>
+                    <p class="text-[10px] text-[#585b70] mt-1">PDF, TXT, JS, PY, HTML vb. (Maks 10MB)</p>
+                </div>
+
+                <!-- Yüklenen Dosyalar Listesi -->
+                <div id="uploaded-files-container" class="mt-3 hidden">
+                    <h4 class="text-xs font-semibold text-[#a6adc8] mb-2">Yüklenen Belgeler:</h4>
+                    <div id="files-list" class="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+                        <!-- Dinamik olarak dosyalar buraya eklenecek -->
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-[#313244] mt-auto">
+
+            <!-- İpuçları -->
+            <div class="bg-[#313244]/30 border border-[#45475a] p-3 rounded-xl text-xs">
+                <span class="text-[#f9e2af] font-bold block mb-1"><i class="fa-solid fa-circle-info"></i> Profesyonel İpucu:</span>
+                <span class="text-[#a6adc8]">Çok uzun kodlar yazdırmak istediğinizde yapay zekaya yapıyı modüller halinde kurmasını ve her modülü tüm detaylarıyla yazmasını söyleyin.</span>
+            </div>
+        </aside>
+
+        <!-- Sağ Panel: Sohbet Alanı -->
+        <section class="flex-1 bg-[#181825] border border-[#313244] rounded-2xl flex flex-col overflow-hidden shadow-sm">
+            
+            <!-- Sohbet Mesajları Ekranı -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Hoşgeldiniz Mesajı -->
+                <div class="flex gap-3 max-w-[85%]">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#89b4fa] to-[#cba6f7] flex items-center justify-center text-[#11111b] shrink-0 font-bold text-xs shadow">
+                        AI
+                    </div>
+                    <div class="bg-[#313244]/50 border border-[#45475a] rounded-2xl rounded-tl-none p-3.5 text-[#cdd6f4]">
+                        <p class="text-sm font-semibold text-[#89b4fa] mb-1">Merhaba! Ben UltraCoder AI.</p>
+                        <p class="text-xs leading-relaxed mb-2">
+                            Verdiğiniz OpenRouter API anahtarı ile çalışmaya hazırım. Kodlama projelerinizde bana sınırları zorlatabilirsiniz! Benim için özel olarak tanımlanmış kurallar sayesinde:
+                        </p>
+                        <ul class="list-disc list-inside text-xs space-y-1 text-[#a6adc8]">
+                            <li>Yarım bırakmadan, "kodun devamı aşağıda" demeden eksiksiz yazarım.</li>
+                            <li>Minimum 5.000 satıra kadar ölçeklenebilen modüler mimariler kurabilirim.</li>
+                            <li>Sol taraftan yükleyeceğiniz kod veya metin dosyalarını okuyup analiz edebilirim.</li>
+                        </ul>
+                        <p class="text-xs mt-2 text-[#a6adc8]">Başlamak için bana ne geliştirmek istediğinizi yazın veya bir dosya yükleyin!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yazıyor Göstergesi -->
+            <div id="typing-indicator" class="hidden px-6 py-3 border-t border-[#313244]/30 bg-[#1e1e2e]/50 flex items-center gap-2">
+                <div class="flex space-x-1">
+                    <div class="w-1.5 h-1.5 bg-[#89b4fa] rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-1.5 h-1.5 bg-[#89b4fa] rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-1.5 h-1.5 bg-[#89b4fa] rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+                <span class="text-xs text-[#a6adc8] italic">Yapay zeka devasa kod bloklarını tasarlıyor...</span>
+            </div>
+
+            <!-- Giriş / Mesaj Gönderme Formu -->
+            <form id="chat-form" class="p-4 border-t border-[#313244] bg-[#1e1e2e]/50 flex flex-col gap-2">
+                <!-- Dosya eki bildirimi (giriş kutusunun üzerinde) -->
+                <div id="attached-files-indicator" class="hidden flex flex-wrap gap-1.5 py-1">
+                    <!-- Aktif eklenti etiketleri dinamik yerleşecek -->
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <div class="flex-1 relative bg-[#181825] border border-[#313244] focus-within:border-[#89b4fa] rounded-xl transition-all p-1.5 flex flex-col">
+                        <textarea id="user-input" rows="2" placeholder="Nasıl bir yazılım mimarisi kuralım? Detayları yazın..." class="w-full bg-transparent resize-none border-0 outline-none focus:ring-0 text-sm text-[#cdd6f4] px-2 py-1 placeholder-[#585b70]"></textarea>
+                        
+                        <div class="flex items-center justify-between px-2 pt-1.5 border-t border-[#313244]/40 mt-1">
+                            <span class="text-[10px] text-[#585b70]">Enter ile gönder, Shift+Enter yeni satır</span>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="document.getElementById('file-input').click()" class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors p-1" title="Dosya Ekle">
+                                    <i class="fa-solid fa-paperclip"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="bg-[#89b4fa] hover:bg-[#b4befe] text-[#11111b] font-semibold h-11 px-5 rounded-xl transition-all shadow-md shadow-indigo-500/5 flex items-center justify-center gap-1.5 shrink-0">
+                        <span>Gönder</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+            </form>
+
+        </section>
+    </main>
+
+    <!-- Hata Bildirim Toast'ı -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-[#f38ba8] text-[#11111b] px-4 py-3 rounded-xl shadow-2xl font-semibold text-sm flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span id="toast-message">Hata oluştu!</span>
+    </div>
+
+    <!-- JavaScript Mantığı -->
+    <script>
+        // API Yapılandırması (Verdiğiniz Key otomatik entegredir)
+        const OPENROUTER_API_KEY = "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";
+        const MODEL_NAME = "google/gemini-2.5-pro"; // Uzun metin ve kod yeteneği en yüksek modellerden biri
+        
+        // Yapay zekaya devasa kod yazması için eğitilmiş sistem yönergesi (System Prompt)
+        const SYSTEM_PROMPT = `Sen dünyanın en iyi, kıdemli (Senior) yazılım mimarı ve kod üreticisisin. 
+Kullanıcının isteklerine göre inanılmaz derecede detaylı, profesyonel, temiz (Clean Code) ve üretime hazır (Production-ready) kodlar yazmak üzere programlandın.
+
+SENİN İÇİN EN ÖNEMLİ KURALLAR:
+1. Senden istenen projenin kodlarını YARIM BIRAKMA. Asla "kodun devamı şurada", "// buraya diğer fonksiyonlar gelecek" gibi geçiştirmeler yapma. Her şeyi baştan sona tam ve eksiksiz yaz.
+2. Yazdığın kodların uzunluğunu maksimize et. Hedefin en az 5.000 satır (5k) ila 100.000 satır (100k) aralığında devasa, kapsamlı ve derinlemesine yapılandırılmış yazılımlar üretmektir.
+3. Bu uzunluğa ulaşmak için:
+   - Tüm yardımcı sınıfları, arayüzleri, veri tabanı modellerini, hata yakalama mekanizmalarını (try-catch), loglama sistemlerini ve test senaryolarını kodun içine entegre et.
+   - Kodları son derece modüler, anlaşılır yorum satırlarıyla süslenmiş ve kurumsal standartlara uygun yaz.
+   - Her modülü, fonksiyonu ve sınıfı en ince ayrıntısına kadar detaylandır.
+4. Türkçe konuş ve kod yorumlarını Türkçe olarak ekle.
+5. Eğer kullanıcı bir dosya içeriği yüklerse, o dosyadaki yapıyı derinlemesine incele ve kodları o yapıya tam uyumlu hale getirerek genişlet.`;
+
+        // Durum Yönetimi
+        let chatHistory = [
+            { role: "system", content: SYSTEM_PROMPT }
+        ];
+        let uploadedFiles = []; // { name: string, content: string }
+
+        // DOM Elementleri
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const filesList = document.getElementById('files-list');
+        const uploadedFilesContainer = document.getElementById('uploaded-files-container');
+        const attachedFilesIndicator = document.getElementById('attached-files-indicator');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        // Toast Bildirimi Göster
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+        }
+
+        // Metin içindeki kod bloklarını algılayıp şık kopyalama butonlu kartlara dönüştürme fonksiyonu
+        function formatMessageContent(text) {
+            // Kod bloklarını tespit et
+            const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+            let formatted = text;
+            
+            // Güvenli HTML dönüşümü
+            formatted = formatted
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Kod bloklarını tekrar düzenle
+            formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, lang, code) {
+                const randomId = 'code-' + Math.random().toString(36).substr(2, 9);
+                return `
+                    <div class="my-3 border border-[#45475a] rounded-xl overflow-hidden bg-[#1e1e2e] shadow-lg max-w-full">
+                        <div class="bg-[#181825] px-4 py-2 border-b border-[#313244] flex justify-between items-center text-xs text-[#a6adc8]">
+                            <span class="font-mono uppercase font-bold text-[#89b4fa]">${lang || 'kod'}</span>
+                            <button type="button" onclick="copyToClipboard('${randomId}')" class="hover:text-white transition-colors flex items-center gap-1">
+                                <i class="fa-regular fa-copy"></i> Kopyala
+                            </button>
+                        </div>
+                        <pre class="p-4 overflow-x-auto text-xs code-block text-[#f5e0dc] leading-relaxed"><code id="${randomId}">${code}</code></pre>
+                    </div>
+                `;
+            });
+
+            // Satır içi küçük kodları biçimlendir (`kod` yapısı)
+            formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-[#313244] text-[#f5c2e7] px-1.5 py-0.5 rounded font-mono text-xs">$1</code>');
+
+            // Yeni satırları koru
+            return formatted.replace(/\n/g, '<br>');
+        }
+
+        // Pano kopyalama (Kısıtlamalara karşı uyumlu fallback kullanımı)
+        window.copyToClipboard = function(id) {
+            const codeEl = document.getElementById(id);
+            if (!codeEl) return;
+            
+            // HTML varlıklarını geri çözmek için geçici bir alan kullanalım
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = codeEl.innerText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast("Kod panoya kopyalandı!");
+            } catch (err) {
+                showToast("Kopyalama başarısız oldu.");
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        // Mesajı Arayüze Ekle
+        function appendMessage(role, text) {
+            const isAI = role === 'assistant';
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex gap-3 max-w-[90%] md:max-w-[85%] ${isAI ? '' : 'ml-auto flex-row-reverse'}`;
+
+            const avatar = isAI 
+                ? `<div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#89b4fa] to-[#cba6f7] flex items-center justify-center text-[#11111b] shrink-0 font-bold text-xs shadow">AI</div>`
+                : `<div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#a6e3a1] to-[#94e2d5] flex items-center justify-center text-[#11111b] shrink-0 font-bold text-xs shadow">SİZ</div>`;
+
+            const bgClass = isAI 
+                ? 'bg-[#313244]/50 border border-[#45475a] rounded-tl-none' 
+                : 'bg-[#89b4fa]/10 border border-[#89b4fa]/30 rounded-tr-none text-[#cdd6f4]';
+
+            messageDiv.innerHTML = `
+                ${avatar}
+                <div class="${bgClass} rounded-2xl p-3.5 shadow-sm max-w-full overflow-hidden">
+                    <p class="text-xs font-semibold ${isAI ? 'text-[#89b4fa]' : 'text-[#a6e3a1]'} mb-1">${isAI ? 'UltraCoder AI' : 'Siz'}</p>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap">${isAI ? formatMessageContent(text) : text}</div>
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Dosya Okuma ve İşleme
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    
+                    // Eğer dosya zaten ekliyse tekrar ekleme
+                    if (uploadedFiles.some(f => f.name === file.name)) return;
+
+                    uploadedFiles.push({
+                        name: file.name,
+                        content: content
+                    });
+
+                    updateFilesUI();
+                };
+                
+                // Metin tabanlı dosyaları oku
+                reader.readAsText(file);
+            });
+        }
+
+        // Dosya Arayüzünü Güncelle
+        function updateFilesUI() {
+            if (uploadedFiles.length > 0) {
+                uploadedFilesContainer.classList.remove('hidden');
+                attachedFilesIndicator.classList.remove('hidden');
+            } else {
+                uploadedFilesContainer.classList.add('hidden');
+                attachedFilesIndicator.classList.add('hidden');
+            }
+
+            // Sol Panel Dosya Listesi
+            filesList.innerHTML = '';
+            // Form Altı Belirteç Listesi
+            attachedFilesIndicator.innerHTML = '';
+
+            uploadedFiles.forEach((file, index) => {
+                // Sol Liste Elemanı
+                const fileItem = document.createElement('div');
+                fileItem.className = "flex items-center justify-between bg-[#1e1e2e] border border-[#313244] px-2.5 py-1.5 rounded-lg text-xs";
+                fileItem.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        <i class="fa-solid fa-file-code text-[#89b4fa]"></i>
+                        <span class="truncate font-mono text-[#cdd6f4]" title="${file.name}">${file.name}</span>
+                    </div>
+                    <button type="button" onclick="removeFile(${index})" class="text-[#f38ba8] hover:text-red-400 transition-colors p-0.5">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                filesList.appendChild(fileItem);
+
+                // Form Altı Küçük Etiket
+                const badge = document.createElement('span');
+                badge.className = "inline-flex items-center gap-1.5 bg-[#313244] border border-[#45475a] text-xs text-[#cdd6f4] px-2.5 py-1 rounded-full font-mono";
+                badge.innerHTML = `
+                    <i class="fa-solid fa-paperclip text-[10px] text-[#89b4fa]"></i>
+                    ${file.name}
+                    <button type="button" onclick="removeFile(${index})" class="text-[#f38ba8] hover:text-red-400 font-bold ml-1">×</button>
+                `;
+                attachedFilesIndicator.appendChild(badge);
+            });
+        }
+
+        // Dosya Çıkar
+        window.removeFile = function(index) {
+            uploadedFiles.splice(index, 1);
+            updateFilesUI();
+        }
+
+        // Sürükle Bırak Olayları
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-[#89b4fa]', 'bg-[#1e1e2e]/50');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-[#89b4fa]', 'bg-[#1e1e2e]/50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-[#89b4fa]', 'bg-[#1e1e2e]/50');
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+            }
+        });
+
+        // Metin Alanında Shift+Enter Kontrolü
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.requestSubmit();
+            }
+        });
+
+        // API'ye İstek Gönderme Fonksiyonu (Exponential Backoff Entegreli)
+        async function fetchAIResponse(payload, attempt = 0) {
+            const url = "https://openrouter.ai/api/v1/chat/completions";
+            
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href, // OpenRouter için referans url
+                        "X-Title": "UltraCoder AI Desktop App"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Hata kodu: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                // Üst üste 5 kez deneme yapısı (1s, 2s, 4s, 8s, 16s bekleme süreleriyle)
+                if (attempt < 5) {
+                    const delay = Math.pow(2, attempt) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchAIResponse(payload, attempt + 1);
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        // Form Gönderme Olayı
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const rawPrompt = userInput.value.trim();
+            if (!rawPrompt && uploadedFiles.length === 0) return;
+
+            // Girişi temizle
+            userInput.value = '';
+
+            // Dosya eklerini isteme dahil etme formatı
+            let finalPrompt = rawPrompt;
+            if (uploadedFiles.length > 0) {
+                let fileContexts = "\n\n=== EKLENEN REFERANS DOSYALAR ===\n";
+                uploadedFiles.forEach(file => {
+                    fileContexts += `\n--- DOSYA ADI: ${file.name} ---\n\`\`\`\n${file.content}\n\`\`\`\n`;
+                });
+                finalPrompt += fileContexts;
+            }
+
+            // Kullanıcı arayüzünde sadece kendi girdiği asıl metni gösterelim (Karmaşık kodları gizleyerek temiz görünüm sunar)
+            appendMessage('user', rawPrompt || `${uploadedFiles.length} adet dosya yüklendi ve analize gönderildi.`);
+
+            // Geçmişe ekle
+            chatHistory.push({ role: "user", content: finalPrompt });
+
+            // Arayüz temizlikleri
+            const sentFilesCount = uploadedFiles.length; 
+            uploadedFiles = []; // Gönderilen dosyaları sıfırla
+            updateFilesUI();
+
+            // Yapay zeka yazıyor göstergesini aç
+            typingIndicator.classList.remove('hidden');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // İstek Paketini Hazırla
+            const payload = {
+                model: MODEL_NAME,
+                messages: chatHistory,
+                temperature: 0.3 // Daha kararlı, tutarlı ve profesyonel kod yazması için düşük ısı
+            };
+
+            try {
+                const data = await fetchAIResponse(payload);
+                const aiMessage = data.choices?.[0]?.message?.content;
+
+                if (aiMessage) {
+                    // Mesaj geçmişini koru ve arayüze bas
+                    chatHistory.push({ role: "assistant", content: aiMessage });
+                    appendMessage('assistant', aiMessage);
+                } else {
+                    showToast("Yapay zekadan boş bir yanıt döndü.");
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("Sunucuya bağlanırken bir sorun oluştu. Lütfen tekrar deneyin.");
+            } finally {
+                typingIndicator.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
+
+```
